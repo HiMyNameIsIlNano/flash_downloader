@@ -1,0 +1,6 @@
+Unix shell script to directly stream online video to mplayer. The script is now able to handle youtube video and can be used by all of those who do not want to install any Flash Player plugin on their box.
+
+Changelog:
+1. It is now possible to directly stream video to Mplayer;
+2. Ability to stream Youtube video;
+3. Various bugfixes.

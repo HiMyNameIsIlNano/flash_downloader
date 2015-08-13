@@ -1,0 +1,89 @@
+#!/bin/sh
+
+# Parameters init
+auto_delete=0
+real_time=1
+non_real_time=0
+youtube=0
+debug=0
+
+# Default output formats
+file='video.mp4'
+timestamp=$(date +%s)
+out_dir=/tmp
+log=${out_dir}/log
+cipher="RC4-SHA"
+
+# Default programs
+fm=pcmanfm
+player=mplayer
+youtube_dl=/usr/local/bin/youtube-dl
+
+# Start functions
+# Print out the help
+usage(){
+    echo "usage: flash_downloader [[-e URL [-d] [-a] [--real_time | --non_real_time] [-y]] | [-h]]"
+}
+# End functions 
+
+while [ "$1" != "" ]; do
+    case $1 in
+        -a | --autodelete )	    auto_delete=1
+                                ;;
+		-y | --youtube )        youtube=1
+								;;
+        -d | --debug )	        debug=1
+                                ;;
+        -e | --episode )        shift
+                                episode=$1
+                                ;;
+        -r | --real_time )      real_time=1
+                                ;;
+		--non_real_time )   	real_time=0
+                                ;;
+        -h | --help )           usage
+                                exit
+                                ;;
+        * )                     usage
+                                exit 1
+    esac
+    shift
+done
+
+# If debug mode is  switched on, print variable contents
+if [ "${debug}" == "1" ]
+then
+	echo "Passed URL: " ${episode}
+	echo "real_time: " ${real_time}
+	echo "youtube: " ${youtube}
+	echo "debug: " ${debug}
+	echo "auto_delete: " ${auto_delete}
+fi
+
+if [ "${real_time}" == "1" ]
+then
+	if [ "${youtube}" == "1" ]
+	then
+		echo "Streaming " "$(${youtube_dl} --get-title ytsearch:${episode})" " directly to " ${player}
+		curl --ciphers ${cipher} "$(${youtube_dl} --get-url ytsearch:${episode})" | ${player} -
+	else
+		echo "Streaming file directly to " ${player} 
+		${player} ${episode} &
+	fi
+else
+	echo "Downloading file " ${episode} "to " /tmp/video${timestamp}.mp4
+
+	curl -o /tmp/video${timestamp}.mp4 2>>$log${timestamp} -# ${episode} &
+	sleep 45
+
+	${fm} ${out_dir} &
+fi
+
+# Delete the file automatically
+if [ "${auto_delete}" == "1" ]
+then
+	echo ${timestamp} > /tmp/video${timestamp}.mp4
+	mv /tmp/video${timestamp}.mp4
+else
+	# Delete files by hand from /tmp/
+fi
